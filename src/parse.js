@@ -1,6 +1,5 @@
-
 /**
- * 
+ *
  * @param {string} urls
  */
 export function parse_urls(urls) {
@@ -39,7 +38,7 @@ export function parse_fields(fields) {
 			i = value_result.index;
 			value = value_result.value;
 
-			result[key] = value;
+			result.set(key, value);
 			inKey = true;
 		}
 	}
