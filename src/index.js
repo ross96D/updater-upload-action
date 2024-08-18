@@ -1,11 +1,22 @@
 const core = require("@actions/core");
+const process = require("node:process");
 const path_module = require("node:path");
 const fs = require("node:fs/promises");
-const { parse_fields, parse_urls } = require("./parse");
+const { parse_fields, parse_urls, UrlEntry } = require("./parse");
 
 async function main() {
-	const fieldsStr = core.getInput("fields");
-	const urlsStr = core.getInput("urls");
+	let arg_fields = "";
+	let arg_urls = "";
+	if (process.argv.length === 4) {
+		arg_fields = process.argv[2];
+		arg_urls = process.argv[3];
+	}
+
+	const fieldsStr = core.getInput("fields") || arg_fields;
+	const urlsStr = core.getInput("urls") || arg_urls;
+
+	console.log("fields", fieldsStr);
+	console.log("urls", urlsStr);
 
 	const urls = parse_urls(urlsStr);
 	const fields = parse_fields(fieldsStr);
@@ -41,7 +52,7 @@ async function getFormData(fields) {
 /**
  *
  * @param {Map<string, string>} fields
- * @param {string[]} urls
+ * @param {UrlEntry[]} urls
  */
 async function upload(fields, urls) {
 	let failedAll = true;
@@ -49,14 +60,20 @@ async function upload(fields, urls) {
 	for (const url of urls) {
 		const form = await getFormData(fields);
 		try {
-			const response = await fetch(new URL(url), {
+			const response = await fetch(new URL(url.url), {
 				method: "POST",
 				body: form,
-				headers: {},
+				headers: {
+					Authorization: url.password,
+				},
 			});
 
 			if (response.status === 200) {
 				failedAll = false;
+			} else {
+				const data = await response.body?.getReader().read();
+				const resp = new TextDecoder().decode(data?.value);
+				console.error(`${url} status code ${response.status} ${resp}`);
 			}
 		} catch (e) {
 			console.error(e);

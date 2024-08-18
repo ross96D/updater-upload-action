@@ -1,9 +1,45 @@
+export class UrlEntry {
+	#input = "";
+
+	/**
+	 *
+	 * @param {string} password
+	 * @param {string} fullUrl
+	 */
+	constructor(password, fullUrl) {
+		this.#input = fullUrl;
+		this.password = password;
+		if (password) {
+			this.url = fullUrl.replace(`${password}@`, "");
+		} else {
+			this.url = fullUrl;
+		}
+	}
+
+	toString() {
+		return this.url;
+	}
+}
+
 /**
  *
  * @param {string} urls
+ * @returns {UrlEntry[]}
  */
 export function parse_urls(urls) {
-	return urls.trim().split(";");
+	const urlsArray = urls.trim().split(";");
+	const result = [];
+	for (const url of urlsArray) {
+		const splited = url.split("@");
+		if (splited.length === 1) {
+			result.push(new UrlEntry("", url));
+			continue;
+		}
+
+		const password = splited[0].split("//")[1];
+		result.push(new UrlEntry(password, url));
+	}
+	return result;
 }
 
 /**
@@ -20,7 +56,6 @@ export function parse_fields(fields) {
 	let inKey = true;
 
 	let { index: i, key } = parse_key(0, trimedFields);
-	if (trimedFields[i] !== '"') throw Error('Should be " character');
 	inKey = false;
 	while (i < trimedFields.length) {
 		const char = trimedFields[i];
