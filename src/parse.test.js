@@ -22,6 +22,8 @@ group("parse fields", async () => {
 		const text = "dist=12";
 		expect(parse_fields(text)).toStrictEqual(new Map([["dist", "12"]]));
 	});
+
+	test("fail", () => {});
 });
 
 group("parse urls", async () => {
@@ -34,11 +36,11 @@ group("parse urls", async () => {
 	});
 
 	test("parse with token", () => {
-		const text = "http://password123@example.com/path;https://pass@192.168.0.1:32/path";
+		const text =
+			"http://password123@example.com/path;https://pass@192.168.0.1:32/path";
 		expect(parse_urls(text)).toStrictEqual([
 			new UrlEntry("password123", "http://example.com/path"),
 			new UrlEntry("pass", "https://192.168.0.1:32/path"),
 		]);
-	})
-})
-
+	});
+});
