@@ -5,15 +5,15 @@ const fs = require("node:fs/promises");
 const { parse_fields, parse_urls, UrlEntry } = require("./parse");
 
 async function main() {
-	let arg_fields = "";
-	let arg_urls = "";
+	let argFields = "";
+	let argUrls = "";
 	if (process.argv.length === 4) {
-		arg_fields = process.argv[2];
-		arg_urls = process.argv[3];
+		argFields = process.argv[2];
+		argUrls = process.argv[3];
 	}
 
-	const fieldsStr = core.getInput("fields") || arg_fields;
-	const urlsStr = core.getInput("urls") || arg_urls;
+	const fieldsStr = core.getInput("fields") || argFields;
+	const urlsStr = core.getInput("urls") || argUrls;
 
 	console.log("fields", fieldsStr);
 	console.log("urls", urlsStr);

@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "build": "esbuild --bundle --format=cjs --platform=node src/index.js --outfile=dist/index.js",
-    "test": "npx vitest"
+    "test": "npx vitest run"
   },
   "keywords": [],
   "author": "",
