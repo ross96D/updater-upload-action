@@ -8,7 +8,7 @@ const { Agent, setGlobalDispatcher } = require("undici");
 async function main() {
 	let argFields = "";
 	let argUrls = "";
-	let argInsecure = "";
+	let argInsecure = null;
 	if (process.argv.length === 5) {
 		argFields = process.argv[2];
 		argUrls = process.argv[3];
@@ -17,7 +17,7 @@ async function main() {
 
 	const fieldsStr = core.getInput("fields") || argFields;
 	const urlsStr = core.getInput("urls") || argUrls;
-	const insecure = !!(argInsecure ?? core.getInput("insecure"));
+	const insecure = !!(core.getInput("insecure") || argInsecure);
 
 	console.log("fields", fieldsStr);
 	console.log("urls", urlsStr);
