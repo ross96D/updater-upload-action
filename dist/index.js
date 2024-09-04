@@ -19123,9 +19123,11 @@ var { request } = require("node:https");
 async function main() {
   let argFields = "";
   let argUrls = "";
-  if (process2.argv.length === 4) {
+  let argInsecure = "";
+  if (process2.argv.length === 5) {
     argFields = process2.argv[2];
     argUrls = process2.argv[3];
+    argInsecure = process2.argv[4] === "false" ? "" : "true";
   }
   const fieldsStr = core.getInput("fields") || argFields;
   const urlsStr = core.getInput("urls") || argUrls;
@@ -19162,7 +19164,8 @@ async function upload(fields, urls, insecure) {
     const form = await getFormData(fields);
     try {
       let uri = new URL(url.url);
-      if (uri.protocol == "https" && insecure) {
+      console.log(uri);
+      if (uri.protocol == "https:" && insecure) {
         request({
           method: "POST",
           host: uri.host,

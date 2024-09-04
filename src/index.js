@@ -8,9 +8,11 @@ const { request } = require("node:https");
 async function main() {
 	let argFields = "";
 	let argUrls = "";
-	if (process.argv.length === 4) {
+	let argInsecure = "";
+	if (process.argv.length === 5) {
 		argFields = process.argv[2];
 		argUrls = process.argv[3];
+		argInsecure = process.argv[4] === "false" ? "" : "true";
 	}
 
 	const fieldsStr = core.getInput("fields") || argFields;
@@ -66,7 +68,8 @@ async function upload(fields, urls, insecure) {
 		const form = await getFormData(fields);
 		try {
 			let uri = new URL(url.url);
-			if (uri.protocol == "https" && insecure) {
+			console.log(uri);
+			if (uri.protocol == "https:" && insecure) {
 				request({
 					method: "POST",
 					host: uri.host,
