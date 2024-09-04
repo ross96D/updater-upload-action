@@ -19168,7 +19168,7 @@ async function upload(fields, urls, insecure) {
       if (uri.protocol == "https:" && insecure) {
         request({
           method: "POST",
-          host: uri.host,
+          host: uri.hostname,
           port: uri.port,
           path: uri.pathname,
           search: uri.search,
