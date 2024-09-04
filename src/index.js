@@ -3,6 +3,7 @@ const process = require("node:process");
 const path_module = require("node:path");
 const fs = require("node:fs/promises");
 const { parse_fields, parse_urls, UrlEntry } = require("./parse");
+const { request } = require("node:https");
 
 async function main() {
 	let argFields = "";
@@ -14,15 +15,17 @@ async function main() {
 
 	const fieldsStr = core.getInput("fields") || argFields;
 	const urlsStr = core.getInput("urls") || argUrls;
+	const insecure = core.getInput("insecure") ? true : false;
 
 	console.log("fields", fieldsStr);
 	console.log("urls", urlsStr);
+	console.log("insecure", insecure)
 
 	const urls = parse_urls(urlsStr);
 	const fields = parse_fields(fieldsStr);
 
 	try {
-		await upload(fields, urls);
+		await upload(fields, urls, insecure);
 	} catch (e) {
 		console.error(e);
 		core.setFailed(e);
@@ -54,14 +57,40 @@ async function getFormData(fields) {
  *
  * @param {Map<string, string>} fields
  * @param {UrlEntry[]} urls
+ * @param { boolean } insecure
  */
-async function upload(fields, urls) {
+async function upload(fields, urls, insecure) {
 	let failedAll = true;
 
 	for (const url of urls) {
 		const form = await getFormData(fields);
 		try {
-			const response = await fetch(new URL(url.url), {
+			let uri = new URL(url.url);
+			if (uri.protocol == "https" && insecure) {
+				request({
+					method: "POST",
+					host: uri.host,
+					port: uri.port,
+					path: uri.pathname,
+					search: uri.search,
+					rejectUnauthorized: false,
+					checkServerIdentity: (hostname, cert) => undefined,
+				}, (res) => {
+					let data;
+					if (res.statusCode === 200) {
+						failedAll = false;
+						return;
+					}
+					res.on("data", (d) => data + d);
+					res.on("close", () => {
+						const resp =new TextDecoder().decode(data);
+						console.error(`${url} status code ${res.statusCode} ${resp}`);	
+					})
+				});
+				continue;
+			}
+
+			const response = await fetch(uri, {
 				method: "POST",
 				body: form,
 				headers: {

@@ -7,6 +7,8 @@ inputs:
   fields:
     description: 'fields of the form ej: field1=value field2=@path/to/file field3="@path/to/file with space"'
     required: true
+  insecure:
+    description: 'allow insecure call with https'
 outputs:
   time: # id of output
     description: "The time we greeted you"
