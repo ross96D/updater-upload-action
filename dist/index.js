@@ -9400,7 +9400,7 @@ var require_agent = __commonJS({
     function defaultFactory(origin, opts) {
       return opts && opts.connections === 1 ? new Client(origin, opts) : new Pool(origin, opts);
     }
-    var Agent = class extends DispatcherBase {
+    var Agent2 = class extends DispatcherBase {
       constructor({ factory = defaultFactory, maxRedirections = 0, connect, ...options } = {}) {
         super();
         if (typeof factory !== "function") {
@@ -9491,7 +9491,7 @@ var require_agent = __commonJS({
         await Promise.all(destroyPromises);
       }
     };
-    module2.exports = Agent;
+    module2.exports = Agent2;
   }
 });
 
@@ -11224,7 +11224,7 @@ var require_mock_agent = __commonJS({
   "node_modules/undici/lib/mock/mock-agent.js"(exports2, module2) {
     "use strict";
     var { kClients } = require_symbols();
-    var Agent = require_agent();
+    var Agent2 = require_agent();
     var {
       kAgent,
       kMockAgentSet,
@@ -11259,7 +11259,7 @@ var require_mock_agent = __commonJS({
         if (opts && opts.agent && typeof opts.agent.dispatch !== "function") {
           throw new InvalidArgumentError("Argument opts.agent must implement Agent");
         }
-        const agent = opts && opts.agent ? opts.agent : new Agent(opts);
+        const agent = opts && opts.agent ? opts.agent : new Agent2(opts);
         this[kAgent] = agent;
         this[kClients] = agent[kClients];
         this[kOptions] = buildMockOptions(opts);
@@ -11364,7 +11364,7 @@ var require_proxy_agent = __commonJS({
     "use strict";
     var { kProxy, kClose, kDestroy, kInterceptors } = require_symbols();
     var { URL: URL3 } = require("url");
-    var Agent = require_agent();
+    var Agent2 = require_agent();
     var Pool = require_pool();
     var DispatcherBase = require_dispatcher_base();
     var { InvalidArgumentError, RequestAbortedError } = require_errors();
@@ -11397,7 +11397,7 @@ var require_proxy_agent = __commonJS({
       constructor(opts) {
         super(opts);
         this[kProxy] = buildProxyOptions(opts);
-        this[kAgent] = new Agent(opts);
+        this[kAgent] = new Agent2(opts);
         this[kInterceptors] = opts.interceptors && opts.interceptors.ProxyAgent && Array.isArray(opts.interceptors.ProxyAgent) ? opts.interceptors.ProxyAgent : [];
         if (typeof opts === "string") {
           opts = { uri: opts };
@@ -11426,7 +11426,7 @@ var require_proxy_agent = __commonJS({
         const connect = buildConnector({ ...opts.proxyTls });
         this[kConnectEndpoint] = buildConnector({ ...opts.requestTls });
         this[kClient] = clientFactory(resolvedUrl, { connect });
-        this[kAgent] = new Agent({
+        this[kAgent] = new Agent2({
           ...opts,
           connect: async (opts2, callback) => {
             let requestedHost = opts2.host;
@@ -11783,11 +11783,11 @@ var require_global2 = __commonJS({
     "use strict";
     var globalDispatcher = Symbol.for("undici.globalDispatcher.1");
     var { InvalidArgumentError } = require_errors();
-    var Agent = require_agent();
+    var Agent2 = require_agent();
     if (getGlobalDispatcher() === void 0) {
-      setGlobalDispatcher(new Agent());
+      setGlobalDispatcher2(new Agent2());
     }
-    function setGlobalDispatcher(agent) {
+    function setGlobalDispatcher2(agent) {
       if (!agent || typeof agent.dispatch !== "function") {
         throw new InvalidArgumentError("Argument agent must implement Agent");
       }
@@ -11802,7 +11802,7 @@ var require_global2 = __commonJS({
       return globalThis[globalDispatcher];
     }
     module2.exports = {
-      setGlobalDispatcher,
+      setGlobalDispatcher: setGlobalDispatcher2,
       getGlobalDispatcher
     };
   }
@@ -17465,7 +17465,7 @@ var require_undici = __commonJS({
     var errors = require_errors();
     var Pool = require_pool();
     var BalancedPool = require_balanced_pool();
-    var Agent = require_agent();
+    var Agent2 = require_agent();
     var util = require_util();
     var { InvalidArgumentError } = errors;
     var api = require_api();
@@ -17476,7 +17476,7 @@ var require_undici = __commonJS({
     var mockErrors = require_mock_errors();
     var ProxyAgent = require_proxy_agent();
     var RetryHandler = require_RetryHandler();
-    var { getGlobalDispatcher, setGlobalDispatcher } = require_global2();
+    var { getGlobalDispatcher, setGlobalDispatcher: setGlobalDispatcher2 } = require_global2();
     var DecoratorHandler = require_DecoratorHandler();
     var RedirectHandler = require_RedirectHandler();
     var createRedirectInterceptor = require_redirectInterceptor();
@@ -17492,7 +17492,7 @@ var require_undici = __commonJS({
     module2.exports.Client = Client;
     module2.exports.Pool = Pool;
     module2.exports.BalancedPool = BalancedPool;
-    module2.exports.Agent = Agent;
+    module2.exports.Agent = Agent2;
     module2.exports.ProxyAgent = ProxyAgent;
     module2.exports.RetryHandler = RetryHandler;
     module2.exports.DecoratorHandler = DecoratorHandler;
@@ -17539,7 +17539,7 @@ var require_undici = __commonJS({
         }, handler);
       };
     }
-    module2.exports.setGlobalDispatcher = setGlobalDispatcher;
+    module2.exports.setGlobalDispatcher = setGlobalDispatcher2;
     module2.exports.getGlobalDispatcher = getGlobalDispatcher;
     if (util.nodeMajor > 16 || util.nodeMajor === 16 && util.nodeMinor >= 8) {
       let fetchImpl = null;
@@ -19120,6 +19120,7 @@ var path_module = require("node:path");
 var fs = require("node:fs/promises");
 var { parse_fields: parse_fields2, parse_urls: parse_urls2, UrlEntry: UrlEntry2 } = (init_parse2(), __toCommonJS(parse_exports));
 var { request } = require("node:https");
+var { Agent, setGlobalDispatcher } = require_undici();
 async function main() {
   let argFields = "";
   let argUrls = "";
@@ -19131,7 +19132,7 @@ async function main() {
   }
   const fieldsStr = core.getInput("fields") || argFields;
   const urlsStr = core.getInput("urls") || argUrls;
-  const insecure = core.getInput("insecure") ? true : false;
+  const insecure = !!(argInsecure ?? core.getInput("insecure"));
   console.log("fields", fieldsStr);
   console.log("urls", urlsStr);
   console.log("insecure", insecure);
@@ -19163,30 +19164,14 @@ async function upload(fields, urls, insecure) {
   for (const url of urls) {
     const form = await getFormData(fields);
     try {
-      let uri = new URL(url.url);
-      console.log(uri);
-      if (uri.protocol == "https:" && insecure) {
-        request({
-          method: "POST",
-          host: uri.hostname,
-          port: uri.port,
-          path: uri.pathname,
-          search: uri.search,
-          rejectUnauthorized: false,
-          checkServerIdentity: (hostname, cert) => void 0
-        }, (res) => {
-          let data;
-          if (res.statusCode === 200) {
-            failedAll = false;
-            return;
+      const uri = new URL(url.url);
+      if (uri.protocol === "https:" && insecure) {
+        const agent = new Agent({
+          connect: {
+            rejectUnauthorized: false
           }
-          res.on("data", (d) => data + d);
-          res.on("close", () => {
-            const resp = new TextDecoder().decode(data);
-            console.error(`${url} status code ${res.statusCode} ${resp}`);
-          });
         });
-        continue;
+        setGlobalDispatcher(agent);
       }
       const response = await fetch(uri, {
         method: "POST",

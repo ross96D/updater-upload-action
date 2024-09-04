@@ -3,7 +3,7 @@ const process = require("node:process");
 const path_module = require("node:path");
 const fs = require("node:fs/promises");
 const { parse_fields, parse_urls, UrlEntry } = require("./parse");
-const { request } = require("node:https");
+const { Agent, setGlobalDispatcher } = require("undici");
 
 async function main() {
 	let argFields = "";
@@ -17,11 +17,11 @@ async function main() {
 
 	const fieldsStr = core.getInput("fields") || argFields;
 	const urlsStr = core.getInput("urls") || argUrls;
-	const insecure = core.getInput("insecure") ? true : false;
+	const insecure = !!(argInsecure ?? core.getInput("insecure"));
 
 	console.log("fields", fieldsStr);
 	console.log("urls", urlsStr);
-	console.log("insecure", insecure)
+	console.log("insecure", insecure);
 
 	const urls = parse_urls(urlsStr);
 	const fields = parse_fields(fieldsStr);
@@ -67,30 +67,15 @@ async function upload(fields, urls, insecure) {
 	for (const url of urls) {
 		const form = await getFormData(fields);
 		try {
-			let uri = new URL(url.url);
-			console.log(uri);
-			if (uri.protocol == "https:" && insecure) {
-				request({
-					method: "POST",
-					host: uri.hostname,
-					port: uri.port,
-					path: uri.pathname,
-					search: uri.search,
-					rejectUnauthorized: false,
-					checkServerIdentity: (hostname, cert) => undefined,
-				}, (res) => {
-					let data;
-					if (res.statusCode === 200) {
-						failedAll = false;
-						return;
-					}
-					res.on("data", (d) => data + d);
-					res.on("close", () => {
-						const resp =new TextDecoder().decode(data);
-						console.error(`${url} status code ${res.statusCode} ${resp}`);	
-					})
+			const uri = new URL(url.url);
+			if (uri.protocol === "https:" && insecure) {
+				const agent = new Agent({
+					connect: {
+						rejectUnauthorized: false,
+					},
 				});
-				continue;
+
+				setGlobalDispatcher(agent);
 			}
 
 			const response = await fetch(uri, {
