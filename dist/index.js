@@ -19129,12 +19129,14 @@ async function main() {
   }
   const fieldsStr = core.getInput("fields") || argFields;
   const urlsStr = core.getInput("urls") || argUrls;
+  const insecure = core.getInput("insecure") ? true : false;
   console.log("fields", fieldsStr);
   console.log("urls", urlsStr);
+  console.log("insecure", insecure);
   const urls = parse_urls2(urlsStr);
   const fields = parse_fields2(fieldsStr);
   try {
-    await upload(fields, urls);
+    await upload(fields, urls, insecure);
   } catch (e) {
     console.error(e);
     core.setFailed(e);
@@ -19154,14 +19156,14 @@ async function getFormData(fields) {
   }
   return form;
 }
-async function upload(fields, urls) {
+async function upload(fields, urls, insecure) {
   let failedAll = true;
   for (const url of urls) {
     const form = await getFormData(fields);
     try {
       let uri = new URL(url.url);
-      if (uri.protocol == "https") {
-        const req = request({
+      if (uri.protocol == "https" && insecure) {
+        request({
           method: "POST",
           host: uri.host,
           port: uri.port,
