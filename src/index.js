@@ -41,6 +41,7 @@ async function main() {
  */
 async function getFormData(fields) {
 	const form = new FormData();
+	let foundField = false
 	for (const key of fields.keys()) {
 		const value = fields.get(key) ?? "";
 		if (value[0] === "@") {
@@ -54,9 +55,14 @@ async function getFormData(fields) {
 			}
 			const data = new Blob([]);
 			form.set(key, data, path_module.basename(path));
+			foundField = true
 		} else {
+			foundField = true
 			form.set(key, value);
 		}
+	}
+	if (!foundField) {
+		throw Error("empty form body")
 	}
 	return form;
 }
