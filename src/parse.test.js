@@ -43,4 +43,11 @@ group("parse urls", async () => {
 			new UrlEntry("pass", "https://192.168.0.1:32/path"),
 		]);
 	});
+
+	test("regression", () => {
+		const text = "https://K]wkjca!6bC4>XL%/y:`mH~W5+u@cutrans.perezycia.com/updater/update"
+		expect(parse_urls(text)).toStrictEqual([
+			new UrlEntry("K]wkj;ca!6bC4>XL%/y:`mH~W5+u", "https://cutrans.perezycia.com/updater/update"),
+		]);
+	})
 });

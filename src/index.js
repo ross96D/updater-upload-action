@@ -53,7 +53,7 @@ async function getFormData(fields) {
 			} catch (e) {
 				continue
 			}
-			const data = new Blob([]);
+			const data = new Blob([file]);
 			form.set(key, data, path_module.basename(path));
 			foundField = true
 		} else {
