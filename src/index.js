@@ -46,7 +46,13 @@ async function getFormData(fields) {
 		if (value[0] === "@") {
 			const path = value.substring(1);
 			// TODO do not read all the file into memory
-			const data = new Blob([await fs.readFile(path)]);
+			let file;
+			try {
+				file = await fs.readFile(path)
+			} catch (e) {
+				continue
+			}
+			const data = new Blob([]);
 			form.set(key, data, path_module.basename(path));
 		} else {
 			form.set(key, value);
