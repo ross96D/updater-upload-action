@@ -2,6 +2,8 @@ const core = require("@actions/core");
 const process = require("node:process");
 const path_module = require("node:path");
 const fs = require("node:fs/promises");
+const buffer = require("node:buffer")
+const { ReadableStream } = require("stream/web")
 const { parse_fields, parse_urls, UrlEntry } = require("./parse");
 const { Agent, setGlobalDispatcher } = require("undici");
 
@@ -46,15 +48,23 @@ async function getFormData(fields) {
 		const value = fields.get(key) ?? "";
 		if (value[0] === "@") {
 			const path = value.substring(1);
-			// TODO do not read all the file into memory
+			/** @type fs.FileHandle  */
 			let file;
+			/** @type ReadableStream<any> */
+			let stream;
+			/** @type number */
+			let size;
 			try {
-				file = await fs.readFile(path)
+				file = await fs.open(path);
+				stream = file.readableWebStream();
+				size = (await file.stat()).size;
 			} catch (e) {
+				console.error(`${path} ${e}`);
 				continue
 			}
-			const data = new Blob([file]);
-			form.set(key, data, path_module.basename(path));
+			// @ts-ignore
+			form.set(key, { name: path, size: size, stream: () => stream },
+				path_module.basename(path));
 			foundField = true
 		} else {
 			foundField = true

@@ -1462,8 +1462,8 @@ var require_util = __commonJS({
       }
       return ret;
     }
-    function isBuffer(buffer) {
-      return buffer instanceof Uint8Array || Buffer.isBuffer(buffer);
+    function isBuffer(buffer2) {
+      return buffer2 instanceof Uint8Array || Buffer.isBuffer(buffer2);
     }
     function validateHandler(handler, method, upgrade) {
       if (!handler || typeof handler !== "object") {
@@ -1524,16 +1524,16 @@ var require_util = __commonJS({
         yield Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
       }
     }
-    var ReadableStream;
+    var ReadableStream2;
     function ReadableStreamFrom(iterable) {
-      if (!ReadableStream) {
-        ReadableStream = require("stream/web").ReadableStream;
+      if (!ReadableStream2) {
+        ReadableStream2 = require("stream/web").ReadableStream;
       }
-      if (ReadableStream.from) {
-        return ReadableStream.from(convertIterableToBuffer(iterable));
+      if (ReadableStream2.from) {
+        return ReadableStream2.from(convertIterableToBuffer(iterable));
       }
       let iterator;
-      return new ReadableStream(
+      return new ReadableStream2(
         {
           async start() {
             iterator = iterable[Symbol.asyncIterator]();
@@ -1866,11 +1866,11 @@ var require_PartStream = __commonJS({
   "node_modules/@fastify/busboy/deps/dicer/lib/PartStream.js"(exports2, module2) {
     "use strict";
     var inherits = require("node:util").inherits;
-    var ReadableStream = require("node:stream").Readable;
+    var ReadableStream2 = require("node:stream").Readable;
     function PartStream(opts) {
-      ReadableStream.call(this, opts);
+      ReadableStream2.call(this, opts);
     }
-    inherits(PartStream, ReadableStream);
+    inherits(PartStream, ReadableStream2);
     PartStream.prototype._read = function(n) {
     };
     module2.exports = PartStream;
@@ -3167,25 +3167,25 @@ var require_multipart = __commonJS({
             }
             ++nfields;
             ++nends;
-            let buffer = "";
+            let buffer2 = "";
             let truncated = false;
             curField = part;
             onData = function(data) {
               if ((nsize += data.length) > fieldSizeLimit) {
                 const extralen = fieldSizeLimit - (nsize - data.length);
-                buffer += data.toString("binary", 0, extralen);
+                buffer2 += data.toString("binary", 0, extralen);
                 truncated = true;
                 part.removeAllListeners("data");
               } else {
-                buffer += data.toString("binary");
+                buffer2 += data.toString("binary");
               }
             };
             onEnd = function() {
               curField = void 0;
-              if (buffer.length) {
-                buffer = decodeText(buffer, "binary", charset);
+              if (buffer2.length) {
+                buffer2 = decodeText(buffer2, "binary", charset);
               }
-              boy.emit("field", fieldname, buffer, false, truncated, encoding, contype);
+              boy.emit("field", fieldname, buffer2, false, truncated, encoding, contype);
               --nends;
               checkFinished();
             };
@@ -4438,12 +4438,12 @@ var require_util2 = __commonJS({
         errorSteps(e);
       }
     }
-    var ReadableStream = globalThis.ReadableStream;
+    var ReadableStream2 = globalThis.ReadableStream;
     function isReadableStreamLike(stream) {
-      if (!ReadableStream) {
-        ReadableStream = require("stream/web").ReadableStream;
+      if (!ReadableStream2) {
+        ReadableStream2 = require("stream/web").ReadableStream;
       }
-      return stream instanceof ReadableStream || stream[Symbol.toStringTag] === "ReadableStream" && typeof stream.tee === "function";
+      return stream instanceof ReadableStream2 || stream[Symbol.toStringTag] === "ReadableStream" && typeof stream.tee === "function";
     }
     var MAXIMUM_ARGUMENT_LENGTH = 65535;
     function isomorphicDecode(input) {
@@ -5585,21 +5585,21 @@ var require_body = __commonJS({
     var { isUint8Array, isArrayBuffer } = require("util/types");
     var { File: UndiciFile } = require_file();
     var { parseMIMEType, serializeAMimeType } = require_dataURL();
-    var ReadableStream = globalThis.ReadableStream;
+    var ReadableStream2 = globalThis.ReadableStream;
     var File = NativeFile ?? UndiciFile;
     var textEncoder = new TextEncoder();
     var textDecoder = new TextDecoder();
     function extractBody(object, keepalive = false) {
-      if (!ReadableStream) {
-        ReadableStream = require("stream/web").ReadableStream;
+      if (!ReadableStream2) {
+        ReadableStream2 = require("stream/web").ReadableStream;
       }
       let stream = null;
-      if (object instanceof ReadableStream) {
+      if (object instanceof ReadableStream2) {
         stream = object;
       } else if (isBlobLike(object)) {
         stream = object.stream();
       } else {
-        stream = new ReadableStream({
+        stream = new ReadableStream2({
           async pull(controller) {
             controller.enqueue(
               typeof source === "string" ? textEncoder.encode(source) : source
@@ -5689,14 +5689,14 @@ Content-Type: ${value.type || "application/octet-stream"}\r
             "Response body object should not be disturbed or locked"
           );
         }
-        stream = object instanceof ReadableStream ? object : ReadableStreamFrom(object);
+        stream = object instanceof ReadableStream2 ? object : ReadableStreamFrom(object);
       }
       if (typeof source === "string" || util.isBuffer(source)) {
         length = Buffer.byteLength(source);
       }
       if (action != null) {
         let iterator;
-        stream = new ReadableStream({
+        stream = new ReadableStream2({
           async start() {
             iterator = action(object)[Symbol.asyncIterator]();
           },
@@ -5723,10 +5723,10 @@ Content-Type: ${value.type || "application/octet-stream"}\r
       return [body, type];
     }
     function safelyExtractBody(object, keepalive = false) {
-      if (!ReadableStream) {
-        ReadableStream = require("stream/web").ReadableStream;
+      if (!ReadableStream2) {
+        ReadableStream2 = require("stream/web").ReadableStream;
       }
-      if (object instanceof ReadableStream) {
+      if (object instanceof ReadableStream2) {
         assert(!util.isDisturbed(object), "The body has already been consumed.");
         assert(!object.locked, "The stream is locked.");
       }
@@ -5901,14 +5901,14 @@ Content-Type: ${value.type || "application/octet-stream"}\r
     function bodyUnusable(body) {
       return body != null && (body.stream.locked || util.isDisturbed(body.stream));
     }
-    function utf8DecodeBytes(buffer) {
-      if (buffer.length === 0) {
+    function utf8DecodeBytes(buffer2) {
+      if (buffer2.length === 0) {
         return "";
       }
-      if (buffer[0] === 239 && buffer[1] === 187 && buffer[2] === 191) {
-        buffer = buffer.subarray(3);
+      if (buffer2[0] === 239 && buffer2[1] === 187 && buffer2[2] === 191) {
+        buffer2 = buffer2.subarray(3);
       }
-      const output = textDecoder.decode(buffer);
+      const output = textDecoder.decode(buffer2);
       return output;
     }
     function parseJSONFromBytes(bytes) {
@@ -8675,20 +8675,20 @@ upgrade: ${upgrade}\r
         if (contentLength != null && contentLength !== body.size) {
           throw new RequestContentLengthMismatchError();
         }
-        const buffer = Buffer.from(await body.arrayBuffer());
+        const buffer2 = Buffer.from(await body.arrayBuffer());
         if (isH2) {
           h2stream.cork();
-          h2stream.write(buffer);
+          h2stream.write(buffer2);
           h2stream.uncork();
         } else {
           socket.cork();
           socket.write(`${header}content-length: ${contentLength}\r
 \r
 `, "latin1");
-          socket.write(buffer);
+          socket.write(buffer2);
           socket.uncork();
         }
-        request.onBodySent(buffer);
+        request.onBodySent(buffer2);
         request.onRequestSent();
         if (!expectsPayload) {
           socket[kReset] = true;
@@ -12257,7 +12257,7 @@ var require_response = __commonJS({
     var { kHeadersList, kConstruct } = require_symbols();
     var assert = require("assert");
     var { types } = require("util");
-    var ReadableStream = globalThis.ReadableStream || require("stream/web").ReadableStream;
+    var ReadableStream2 = globalThis.ReadableStream || require("stream/web").ReadableStream;
     var textEncoder = new TextEncoder("utf-8");
     var Response = class _Response {
       // Creates network error Response.
@@ -12544,7 +12544,7 @@ var require_response = __commonJS({
       }
     }
     webidl.converters.ReadableStream = webidl.interfaceConverter(
-      ReadableStream
+      ReadableStream2
     );
     webidl.converters.FormData = webidl.interfaceConverter(
       FormData2
@@ -12571,7 +12571,7 @@ var require_response = __commonJS({
       return webidl.converters.DOMString(V);
     };
     webidl.converters.BodyInit = function(V) {
-      if (V instanceof ReadableStream) {
+      if (V instanceof ReadableStream2) {
         return webidl.converters.ReadableStream(V);
       }
       if (V?.[Symbol.asyncIterator]) {
@@ -13311,7 +13311,7 @@ var require_fetch = __commonJS({
     var { STATUS_CODES } = require("http");
     var GET_OR_HEAD = ["GET", "HEAD"];
     var resolveObjectURL;
-    var ReadableStream = globalThis.ReadableStream;
+    var ReadableStream2 = globalThis.ReadableStream;
     var Fetch = class extends EE {
       constructor(dispatcher) {
         super();
@@ -14058,10 +14058,10 @@ var require_fetch = __commonJS({
       const cancelAlgorithm = (reason) => {
         fetchParams.controller.abort(reason);
       };
-      if (!ReadableStream) {
-        ReadableStream = require("stream/web").ReadableStream;
+      if (!ReadableStream2) {
+        ReadableStream2 = require("stream/web").ReadableStream;
       }
-      const stream = new ReadableStream(
+      const stream = new ReadableStream2(
         {
           async start(controller) {
             fetchParams.controller.controller = controller;
@@ -16787,26 +16787,26 @@ var require_frame = __commonJS({
           offset += 2;
           payloadLength = 126;
         }
-        const buffer = Buffer.allocUnsafe(bodyLength + offset);
-        buffer[0] = buffer[1] = 0;
-        buffer[0] |= 128;
-        buffer[0] = (buffer[0] & 240) + opcode;
-        buffer[offset - 4] = this.maskKey[0];
-        buffer[offset - 3] = this.maskKey[1];
-        buffer[offset - 2] = this.maskKey[2];
-        buffer[offset - 1] = this.maskKey[3];
-        buffer[1] = payloadLength;
+        const buffer2 = Buffer.allocUnsafe(bodyLength + offset);
+        buffer2[0] = buffer2[1] = 0;
+        buffer2[0] |= 128;
+        buffer2[0] = (buffer2[0] & 240) + opcode;
+        buffer2[offset - 4] = this.maskKey[0];
+        buffer2[offset - 3] = this.maskKey[1];
+        buffer2[offset - 2] = this.maskKey[2];
+        buffer2[offset - 1] = this.maskKey[3];
+        buffer2[1] = payloadLength;
         if (payloadLength === 126) {
-          buffer.writeUInt16BE(bodyLength, 2);
+          buffer2.writeUInt16BE(bodyLength, 2);
         } else if (payloadLength === 127) {
-          buffer[2] = buffer[3] = 0;
-          buffer.writeUIntBE(bodyLength, 4, 6);
+          buffer2[2] = buffer2[3] = 0;
+          buffer2.writeUIntBE(bodyLength, 4, 6);
         }
-        buffer[1] |= 128;
+        buffer2[1] |= 128;
         for (let i = 0; i < bodyLength; i++) {
-          buffer[offset + i] = this.frameData[i] ^ this.maskKey[i % 4];
+          buffer2[offset + i] = this.frameData[i] ^ this.maskKey[i % 4];
         }
-        return buffer;
+        return buffer2;
       }
     };
     module2.exports = {
@@ -16858,16 +16858,16 @@ var require_receiver = __commonJS({
             if (this.#byteOffset < 2) {
               return callback();
             }
-            const buffer = this.consume(2);
-            this.#info.fin = (buffer[0] & 128) !== 0;
-            this.#info.opcode = buffer[0] & 15;
+            const buffer2 = this.consume(2);
+            this.#info.fin = (buffer2[0] & 128) !== 0;
+            this.#info.opcode = buffer2[0] & 15;
             this.#info.originalOpcode ??= this.#info.opcode;
             this.#info.fragmented = !this.#info.fin && this.#info.opcode !== opcodes.CONTINUATION;
             if (this.#info.fragmented && this.#info.opcode !== opcodes.BINARY && this.#info.opcode !== opcodes.TEXT) {
               failWebsocketConnection(this.ws, "Invalid frame type was fragmented.");
               return;
             }
-            const payloadLength = buffer[1] & 127;
+            const payloadLength = buffer2[1] & 127;
             if (payloadLength <= 125) {
               this.#info.payloadLength = payloadLength;
               this.#state = parserStates.READ_DATA;
@@ -16942,20 +16942,20 @@ var require_receiver = __commonJS({
             if (this.#byteOffset < 2) {
               return callback();
             }
-            const buffer = this.consume(2);
-            this.#info.payloadLength = buffer.readUInt16BE(0);
+            const buffer2 = this.consume(2);
+            this.#info.payloadLength = buffer2.readUInt16BE(0);
             this.#state = parserStates.READ_DATA;
           } else if (this.#state === parserStates.PAYLOADLENGTH_64) {
             if (this.#byteOffset < 8) {
               return callback();
             }
-            const buffer = this.consume(8);
-            const upper = buffer.readUInt32BE(0);
+            const buffer2 = this.consume(8);
+            const upper = buffer2.readUInt32BE(0);
             if (upper > 2 ** 31 - 1) {
               failWebsocketConnection(this.ws, "Received payload length > 2^31 bytes.");
               return;
             }
-            const lower = buffer.readUInt32BE(4);
+            const lower = buffer2.readUInt32BE(4);
             this.#info.payloadLength = (upper << 8) + lower;
             this.#state = parserStates.READ_DATA;
           } else if (this.#state === parserStates.READ_DATA) {
@@ -16996,25 +16996,25 @@ var require_receiver = __commonJS({
           this.#byteOffset -= this.#buffers[0].length;
           return this.#buffers.shift();
         }
-        const buffer = Buffer.allocUnsafe(n);
+        const buffer2 = Buffer.allocUnsafe(n);
         let offset = 0;
         while (offset !== n) {
           const next = this.#buffers[0];
           const { length } = next;
           if (length + offset === n) {
-            buffer.set(this.#buffers.shift(), offset);
+            buffer2.set(this.#buffers.shift(), offset);
             break;
           } else if (length + offset > n) {
-            buffer.set(next.subarray(0, n - offset), offset);
+            buffer2.set(next.subarray(0, n - offset), offset);
             this.#buffers[0] = next.subarray(n - offset);
             break;
           } else {
-            buffer.set(this.#buffers.shift(), offset);
+            buffer2.set(this.#buffers.shift(), offset);
             offset += next.length;
           }
         }
         this.#byteOffset -= n;
-        return buffer;
+        return buffer2;
       }
       parseCloseBody(onlyCode, data) {
         let code;
@@ -17217,25 +17217,25 @@ var require_websocket = __commonJS({
         if (typeof data === "string") {
           const value = Buffer.from(data);
           const frame = new WebsocketFrameSend(value);
-          const buffer = frame.createFrame(opcodes.TEXT);
+          const buffer2 = frame.createFrame(opcodes.TEXT);
           this.#bufferedAmount += value.byteLength;
-          socket.write(buffer, () => {
+          socket.write(buffer2, () => {
             this.#bufferedAmount -= value.byteLength;
           });
         } else if (types.isArrayBuffer(data)) {
           const value = Buffer.from(data);
           const frame = new WebsocketFrameSend(value);
-          const buffer = frame.createFrame(opcodes.BINARY);
+          const buffer2 = frame.createFrame(opcodes.BINARY);
           this.#bufferedAmount += value.byteLength;
-          socket.write(buffer, () => {
+          socket.write(buffer2, () => {
             this.#bufferedAmount -= value.byteLength;
           });
         } else if (ArrayBuffer.isView(data)) {
           const ab = Buffer.from(data, data.byteOffset, data.byteLength);
           const frame = new WebsocketFrameSend(ab);
-          const buffer = frame.createFrame(opcodes.BINARY);
+          const buffer2 = frame.createFrame(opcodes.BINARY);
           this.#bufferedAmount += ab.byteLength;
-          socket.write(buffer, () => {
+          socket.write(buffer2, () => {
             this.#bufferedAmount -= ab.byteLength;
           });
         } else if (isBlobLike(data)) {
@@ -17243,9 +17243,9 @@ var require_websocket = __commonJS({
           data.arrayBuffer().then((ab) => {
             const value = Buffer.from(ab);
             frame.frameData = value;
-            const buffer = frame.createFrame(opcodes.BINARY);
+            const buffer2 = frame.createFrame(opcodes.BINARY);
             this.#bufferedAmount += value.byteLength;
-            socket.write(buffer, () => {
+            socket.write(buffer2, () => {
               this.#bufferedAmount -= value.byteLength;
             });
           });
@@ -19118,6 +19118,8 @@ var core = require_core();
 var process2 = require("node:process");
 var path_module = require("node:path");
 var fs = require("node:fs/promises");
+var buffer = require("node:buffer");
+var { ReadableStream } = require("stream/web");
 var { parse_fields: parse_fields2, parse_urls: parse_urls2, UrlEntry: UrlEntry2 } = (init_parse2(), __toCommonJS(parse_exports));
 var { Agent, setGlobalDispatcher } = require_undici();
 async function main() {
@@ -19152,13 +19154,21 @@ async function getFormData(fields) {
     if (value[0] === "@") {
       const path = value.substring(1);
       let file;
+      let stream;
+      let size;
       try {
-        file = await fs.readFile(path);
+        file = await fs.open(path);
+        stream = file.readableWebStream();
+        size = (await file.stat()).size;
       } catch (e) {
+        console.error(`${path} ${e}`);
         continue;
       }
-      const data = new Blob([file]);
-      form.set(key, data, path_module.basename(path));
+      form.set(
+        key,
+        { name: path, size, stream: () => stream },
+        path_module.basename(path)
+      );
       foundField = true;
     } else {
       foundField = true;
