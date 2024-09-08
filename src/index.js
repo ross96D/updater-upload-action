@@ -48,11 +48,8 @@ async function getFormData(fields) {
 		const value = fields.get(key) ?? "";
 		if (value[0] === "@") {
 			const path = value.substring(1);
-			/** @type fs.FileHandle  */
 			let file;
-			/** @type ReadableStream<any> */
 			let stream;
-			/** @type number */
 			let size;
 			try {
 				file = await fs.open(path);
