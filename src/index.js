@@ -2,8 +2,6 @@ const core = require("@actions/core");
 const process = require("node:process");
 const path_module = require("node:path");
 const fs = require("node:fs/promises");
-const buffer = require("node:buffer")
-const { ReadableStream } = require("stream/web")
 const { parse_fields, parse_urls, UrlEntry } = require("./parse");
 const { Agent, setGlobalDispatcher } = require("undici");
 
@@ -75,9 +73,23 @@ async function getFormData(fields) {
 }
 
 /**
+ * @param {ReadableStreamDefaultReader<Uint8Array>} stream
+ */
+async function readStream(stream) {
+	while (true) {
+		const { done, value } = await stream.read()
+		if (done) {
+			break
+		}
+		console.log(value.toString())
+	}
+}
+
+
+/**
  *
- * @param {Map<string, string>} fields
- * @param {UrlEntry[]} urls
+ * @param { Map<string, string> } fields
+ * @param { UrlEntry[] } urls
  * @param { boolean } insecure
  */
 async function upload(fields, urls, insecure) {
@@ -105,13 +117,25 @@ async function upload(fields, urls, insecure) {
 				},
 			});
 
-			if (response.status === 200) {
-				failedAll = false;
-			} else {
+			if (response.status !== 200) {
 				const data = await response.body?.getReader().read();
 				const resp = new TextDecoder().decode(data?.value);
 				console.error(`${url} status code ${response.status} ${resp}`);
+				continue
 			}
+
+			const stream = response.body?.getReader()
+			if (!stream) {
+				console.error(`${url} empty body on 200 status code`);
+				continue
+			}
+			try {
+				await readStream(stream)
+			} catch (err) {
+				console.error(`${url} reading body: ${err}`)
+				continue
+			}
+			failedAll = false;
 		} catch (e) {
 			console.error(e);
 		}
