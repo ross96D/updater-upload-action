@@ -1,4 +1,4 @@
-import { expect, assert, test } from "vitest";
+import { expect, test } from "vitest";
 import { UrlEntry, parse_fields, parse_urls } from "./parse";
 import { group } from "@actions/core";
 
@@ -23,7 +23,7 @@ group("parse fields", async () => {
 		expect(parse_fields(text)).toStrictEqual(new Map([["dist", "12"]]));
 	});
 
-	test("fail", () => {});
+	test("fail", () => { });
 });
 
 group("parse urls", async () => {
@@ -47,7 +47,7 @@ group("parse urls", async () => {
 	test("regression", () => {
 		const text = "https://K]wkjca!6bC4>XL%/y:`mH~W5+u@cutrans.perezycia.com/updater/update"
 		expect(parse_urls(text)).toStrictEqual([
-			new UrlEntry("K]wkj;ca!6bC4>XL%/y:`mH~W5+u", "https://cutrans.perezycia.com/updater/update"),
+			new UrlEntry("K]wkjca!6bC4>XL%/y:`mH~W5+u", "https://cutrans.perezycia.com/updater/update"),
 		]);
 	})
 });
