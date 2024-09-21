@@ -4,30 +4,56 @@ const path_module = require("node:path");
 const fs = require("node:fs/promises");
 const { parse_fields, parse_urls, UrlEntry } = require("./parse");
 const { Agent, setGlobalDispatcher } = require("undici");
+const { parseArgs } = require("node:util");
 
 async function main() {
 	let argFields = "";
 	let argUrls = "";
 	let argInsecure = null;
-	if (process.argv.length === 5) {
-		argFields = process.argv[2];
-		argUrls = process.argv[3];
-		argInsecure = process.argv[4] === "false" ? "" : "true";
+	let argDryRun = false;
+	if (process.argv.length >= 5) {
+		const { values, positionals } = parseArgs({
+			strict: true,
+			options: {
+				urls: {
+					type: "string",
+					short: "u",
+				},
+				fields: {
+					type: "string",
+					short: "f",
+				},
+				insecure: {
+					type: "boolean",
+					short: "i"
+				},
+				"dry-run": {
+					type: "boolean"
+				}
+			}
+		})
+
+		argFields = values.fields ?? ""
+		argUrls = values.urls ?? ""
+		argInsecure = values.insecure
+		argDryRun = values["dry-run"] ?? false
 	}
 
 	const fieldsStr = core.getInput("fields") || argFields;
 	const urlsStr = core.getInput("urls") || argUrls;
 	const insecure = !!(core.getInput("insecure") || argInsecure);
+	const dryRun = !!(core.getInput("dry-run") || argDryRun);
 
 	console.log("fields", fieldsStr);
 	console.log("urls", urlsStr);
 	console.log("insecure", insecure);
+	console.log("dryRun", dryRun);
 
 	const urls = parse_urls(urlsStr);
 	const fields = parse_fields(fieldsStr);
 
 	try {
-		await upload(fields, urls, insecure);
+		await upload({ fields, urls, insecure, dryRun });
 	} catch (e) {
 		console.error(e);
 		core.setFailed(e);
@@ -81,18 +107,16 @@ async function readStream(stream) {
 		if (done) {
 			break
 		}
-		console.log(value.toString())
+		const decoder = new TextDecoder("utf8")
+		console.log(decoder.decode(value))
 	}
 }
 
 
 /**
  *
- * @param { Map<string, string> } fields
- * @param { UrlEntry[] } urls
- * @param { boolean } insecure
  */
-async function upload(fields, urls, insecure) {
+async function upload({ fields, urls, insecure, dryRun }) {
 	let failedAll = true;
 
 	for (const url of urls) {
@@ -105,7 +129,6 @@ async function upload(fields, urls, insecure) {
 						rejectUnauthorized: false,
 					},
 				});
-
 				setGlobalDispatcher(agent);
 			}
 
@@ -114,6 +137,7 @@ async function upload(fields, urls, insecure) {
 				body: form,
 				headers: {
 					Authorization: url.password,
+					"dry-run": dryRun,
 				},
 			});
 

@@ -19120,25 +19120,50 @@ var path_module = require("node:path");
 var fs = require("node:fs/promises");
 var { parse_fields: parse_fields2, parse_urls: parse_urls2, UrlEntry: UrlEntry2 } = (init_parse2(), __toCommonJS(parse_exports));
 var { Agent, setGlobalDispatcher } = require_undici();
+var { parseArgs } = require("node:util");
 async function main() {
   let argFields = "";
   let argUrls = "";
   let argInsecure = null;
-  if (process2.argv.length === 5) {
-    argFields = process2.argv[2];
-    argUrls = process2.argv[3];
-    argInsecure = process2.argv[4] === "false" ? "" : "true";
+  let argDryRun = false;
+  if (process2.argv.length >= 5) {
+    const { values, positionals } = parseArgs({
+      strict: true,
+      options: {
+        urls: {
+          type: "string",
+          short: "u"
+        },
+        fields: {
+          type: "string",
+          short: "f"
+        },
+        insecure: {
+          type: "boolean",
+          short: "i"
+        },
+        "dry-run": {
+          type: "boolean"
+        }
+      }
+    });
+    argFields = values.fields ?? "";
+    argUrls = values.urls ?? "";
+    argInsecure = values.insecure;
+    argDryRun = values["dry-run"] ?? false;
   }
   const fieldsStr = core.getInput("fields") || argFields;
   const urlsStr = core.getInput("urls") || argUrls;
   const insecure = !!(core.getInput("insecure") || argInsecure);
+  const dryRun = !!(core.getInput("dry-run") || argDryRun);
   console.log("fields", fieldsStr);
   console.log("urls", urlsStr);
   console.log("insecure", insecure);
+  console.log("dryRun", dryRun);
   const urls = parse_urls2(urlsStr);
   const fields = parse_fields2(fieldsStr);
   try {
-    await upload(fields, urls, insecure);
+    await upload({ fields, urls, insecure, dryRun });
   } catch (e) {
     console.error(e);
     core.setFailed(e);
@@ -19184,10 +19209,11 @@ async function readStream(stream) {
     if (done) {
       break;
     }
-    console.log(value.toString());
+    const decoder = new TextDecoder("utf8");
+    console.log(decoder.decode(value));
   }
 }
-async function upload(fields, urls, insecure) {
+async function upload({ fields, urls, insecure, dryRun }) {
   let failedAll = true;
   for (const url of urls) {
     const form = await getFormData(fields);
@@ -19205,7 +19231,8 @@ async function upload(fields, urls, insecure) {
         method: "POST",
         body: form,
         headers: {
-          Authorization: url.password
+          Authorization: url.password,
+          "dry-run": dryRun
         }
       });
       if (response.status !== 200) {
