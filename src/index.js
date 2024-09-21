@@ -72,20 +72,15 @@ async function getFormData(fields) {
 		const value = fields.get(key) ?? "";
 		if (value[0] === "@") {
 			const path = value.substring(1);
-			let file;
-			let stream;
-			let size;
 			try {
-				file = await fs.open(path);
-				stream = file.readableWebStream();
-				size = (await file.stat()).size;
+				const file = await fs.readFile(path)
+				const data = new Blob([file]);
+				console.log(data)
+				form.set(key, data, path_module.basename(path));
 			} catch (e) {
 				console.error(`${path} ${e}`);
 				continue
 			}
-			// @ts-ignore
-			form.set(key, { name: path, size: size, stream: () => stream },
-				path_module.basename(path));
 			foundField = true
 		} else {
 			foundField = true
@@ -143,6 +138,7 @@ async function upload({ fields, urls, insecure, dryRun }) {
 
 			if (response.status !== 200) {
 				const data = await response.body?.getReader().read();
+				// TODO check for is done. This can miss incoming values
 				const resp = new TextDecoder().decode(data?.value);
 				console.error(`${url} status code ${response.status} ${resp}`);
 				continue
