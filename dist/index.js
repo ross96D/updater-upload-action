@@ -19113,6 +19113,80 @@ var init_parse2 = __esm({
   }
 });
 
+// src/utils.js
+var utils_exports = {};
+__export(utils_exports, {
+  readStream: () => readStream,
+  setLastLine: () => setLastLine
+});
+async function readStream(stream, write) {
+  write ??= (text) => {
+    import_node_process.stdout.write(text);
+  };
+  let lastLine = "";
+  while (true) {
+    const { done, value } = await stream.read();
+    if (value) {
+      const decoder = new TextDecoder("utf8");
+      let text = decoder.decode(value);
+      write(text);
+      let split = text.split("\n");
+      lastLine = setLastLine(lastLine, split);
+    }
+    if (done) {
+      break;
+    }
+  }
+  lastLine = lastLine.trimEnd();
+  lastLine = stripAnsi(lastLine);
+  let matchRegex = /\d{1,2}:\d{1,2}[A,P]M (?<Level>[^\s]+)/;
+  let matches = lastLine.match(matchRegex);
+  if (matches?.groups?.Level === "ERR") {
+    throw "fail: " + lastLine;
+  }
+}
+function stripAnsi(text) {
+  let regex = /[\u001B\u009B][[\]()#;?]*(?:(?:(?:[a-zA-Z\d]*(?:;[a-zA-Z\d]*)*)?\u0007)|(?:(?:\d{1,4}(?:;\d{0,4})*)?[\dA-PRZcf-ntqry=><~]))/g;
+  return text.replaceAll(regex, "");
+}
+function setLastLine(line, newLines) {
+  if (newLines.length == 0) {
+    return line;
+  }
+  let spl = line.split("\n");
+  let sanitizedLine = spl[spl.length - 1];
+  let { lastLine, newLine } = validLastLine(newLines);
+  if (newLine) {
+    return lastLine;
+  } else {
+    return sanitizedLine + lastLine;
+  }
+}
+function validLastLine(newLines) {
+  if (newLines.length == 0) {
+    return { lastLine: "", newLine: false };
+  }
+  if (newLines.length == 1) {
+    return { lastLine: newLines[0], newLine: false };
+  }
+  for (let index = newLines.length - 1; index >= 0; index--) {
+    let line = newLines[index];
+    if (line != "") {
+      if (index != newLines.length - 1) {
+        line = line + "\n";
+      }
+      return { lastLine: line, newLine: index != 0 };
+    }
+  }
+  return { lastLine: "", newLine: false };
+}
+var import_node_process;
+var init_utils = __esm({
+  "src/utils.js"() {
+    import_node_process = require("node:process");
+  }
+});
+
 // src/index.js
 var core = require_core();
 var process2 = require("node:process");
@@ -19121,6 +19195,7 @@ var fs = require("node:fs/promises");
 var { parse_fields: parse_fields2, parse_urls: parse_urls2, UrlEntry: UrlEntry2 } = (init_parse2(), __toCommonJS(parse_exports));
 var { Agent, setGlobalDispatcher } = require_undici();
 var { parseArgs } = require("node:util");
+var { readStream: readStream2 } = (init_utils(), __toCommonJS(utils_exports));
 async function main() {
   let argFields = "";
   let argUrls = "";
@@ -19196,16 +19271,6 @@ async function getFormData(fields) {
   }
   return form;
 }
-async function readStream(stream) {
-  while (true) {
-    const { done, value } = await stream.read();
-    if (done) {
-      break;
-    }
-    const decoder = new TextDecoder("utf8");
-    console.log(decoder.decode(value));
-  }
-}
 async function upload({ fields, urls, insecure, dryRun }) {
   let failedAll = true;
   for (const url of urls) {
@@ -19240,7 +19305,7 @@ async function upload({ fields, urls, insecure, dryRun }) {
         continue;
       }
       try {
-        await readStream(stream);
+        await readStream2(stream);
       } catch (err) {
         console.error(`${url} reading body: ${err}`);
         continue;

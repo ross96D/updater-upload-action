@@ -5,6 +5,7 @@ const fs = require("node:fs/promises");
 const { parse_fields, parse_urls, UrlEntry } = require("./parse");
 const { Agent, setGlobalDispatcher } = require("undici");
 const { parseArgs } = require("node:util");
+const { readStream } = require("./utils");
 
 async function main() {
 	let argFields = "";
@@ -92,35 +93,6 @@ async function getFormData(fields) {
 	}
 	return form;
 }
-
-function stripAnsi(text) {
-	let regex = /[\u001B\u009B][[\\]()#;?]*(?:(?:(?:[a-zA-Z\\d]*(?:;[a-zA-Z\\d]*)*)?\u0007)|(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PRZcf-ntqry=><~]))/g
-	return text.replaceAll(regex, "");
-}
-
-/** @param {ReadableStreamDefaultReader<Uint8Array>} stream */
-async function readStream(stream) {
-	let lastLine = "";
-	while (true) {
-		const { done, value } = await stream.read();
-		if (done) {
-			break;
-		}
-		const decoder = new TextDecoder("utf8");
-		let text = decoder.decode(value);
-		console.log(text);
-
-		let split = text.split('\n');
-		lastLine = split[split.length - 1];
-	}
-	lastLine = stripAnsi(lastLine);
-	let matchRegex = /\d{1,2}:\d{1,2}[A,P]M (?<Level>[^\s]+)/;
-	let matches = lastLine.match(matchRegex)
-	if (matches?.groups?.Level === "ERR") {
-		throw "fail: " + lastLine;
-	}
-}
-
 
 /**
  *

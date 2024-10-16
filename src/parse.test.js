@@ -1,6 +1,7 @@
 import { expect, test } from "vitest";
 import { UrlEntry, parse_fields, parse_urls } from "./parse";
 import { group } from "@actions/core";
+import { readStream, setLastLine } from "./utils";
 
 group("parse fields", async () => {
 	test("parse several edge case line", () => {
@@ -49,5 +50,69 @@ group("parse urls", async () => {
 		expect(parse_urls(text)).toStrictEqual([
 			new UrlEntry("K]wkjca!6bC4>XL%/y:`mH~W5+u", "https://cutrans.perezycia.com/updater/update"),
 		]);
+	})
+});
+
+test("setLastLine", () => {
+	expect(setLastLine("", [""])).toStrictEqual("");
+	expect(setLastLine("prev line", [""])).toStrictEqual("prev line");
+	expect(setLastLine("prev line\n", ["more lines"])).toStrictEqual("more lines");
+	expect(setLastLine("prev line ", ["more lines"])).toStrictEqual("prev line more lines");
+	expect(setLastLine("prev line ", ["more lines", ""])).toStrictEqual("prev line more lines\n");
+	expect(setLastLine("prev line ", ["more lines", "newline"])).toStrictEqual("newline");
+	expect(setLastLine("prev line\n", ["more lines", "newline"])).toStrictEqual("newline");
+	expect(setLastLine("", ["newline"])).toStrictEqual("newline");
+	expect(setLastLine("", ["newline", "newline2"])).toStrictEqual("newline2");
+	expect(setLastLine("", ["newline", "newline2", ""])).toStrictEqual("newline2\n");
+});
+
+group("read stream", async () => {
+	class Stream {
+		static SIZE = 10;
+
+		/**  @param {string} text */
+		constructor(text) {
+			this.text = text;
+			this.offset = 0;
+		}
+
+		read() {
+			let start = this.offset;
+			let end = start + Stream.SIZE;
+			let done = false;
+			if (end >= this.text.length) {
+				end = this.text.length;
+				done = true;
+			}
+			this.offset = end;
+			let text = this.text.slice(start, end);
+			return {
+				done: done,
+				value: new TextEncoder().encode(text),
+			}
+		}
+	}
+
+	test("read_stream.basic", async () => {
+		const input = `line 1
+line 2
+line 3`
+
+		// @ts-ignore
+		await readStream(stream)
+	});
+
+
+	test("read_stream.error", async () => {
+		const input = `[90m12:57PM[0m [32mINF[0m [36mdry-run=[0mfalse
+[90m12:57PM[0m [31mERR[0m [36merror=[0m[31m[1m"no github repo configured"[0m[0m [36mreqID=[0mcs7v111thaoqvb0k07c0
+`
+		let stream = new Stream(input);
+		try {
+			// @ts-ignore
+			await readStream(stream)
+		} catch (e) {
+			expect(e).toStrictEqual(`fail: 12:57PM ERR error="no github repo configured" reqID=cs7v111thaoqvb0k07c0`)
+		}
 	})
 });
