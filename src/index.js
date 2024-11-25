@@ -8,6 +8,7 @@ const { parseArgs } = require("node:util");
 const { readStream } = require("./utils");
 const node_fetch = require("node-fetch");
 const fetch = node_fetch.default;
+const https = require("https");
 
 
 async function main() {
@@ -107,23 +108,26 @@ async function upload({ fields, urls, insecure, dryRun }) {
 		const form = await getFormData(fields);
 		try {
 			const uri = new URL(url.url);
+			let agent_fetch;
 			if (uri.protocol === "https:" && insecure) {
-				const agent = new Agent({
-					connect: {
-						rejectUnauthorized: false,
-					},
+				const agent = new https.Agent({
+					rejectUnauthorized: false,
 				});
-				setGlobalDispatcher(agent);
+				// setGlobalDispatcher(agent);
+				agent_fetch = agent;
 			}
-
-			const response = await fetch(uri, {
+			const requestInit = {
 				method: "POST",
 				body: form,
 				headers: {
 					Authorization: url.password,
 					"dry-run": dryRun,
 				},
-			});
+			};
+			if (agent_fetch) {
+				requestInit.agent = agent_fetch;
+			}
+			const response = await fetch(uri, requestInit);
 
 			if (response.status !== 200) {
 				if (response.body) {
