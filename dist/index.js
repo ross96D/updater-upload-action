@@ -629,7 +629,7 @@ var require_tunnel = __commonJS({
     var net = require("net");
     var tls = require("tls");
     var http3 = require("http");
-    var https2 = require("https");
+    var https3 = require("https");
     var events = require("events");
     var assert = require("assert");
     var util = require("util");
@@ -651,12 +651,12 @@ var require_tunnel = __commonJS({
     }
     function httpOverHttps(options) {
       var agent = new TunnelingAgent(options);
-      agent.request = https2.request;
+      agent.request = https3.request;
       return agent;
     }
     function httpsOverHttps(options) {
       var agent = new TunnelingAgent(options);
-      agent.request = https2.request;
+      agent.request = https3.request;
       agent.createSocket = createSecureSocket;
       agent.defaultPort = 443;
       return agent;
@@ -17656,7 +17656,7 @@ var require_lib = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.HttpClient = exports2.isHttps = exports2.HttpClientResponse = exports2.HttpClientError = exports2.getProxyUrl = exports2.MediaTypes = exports2.Headers = exports2.HttpCodes = void 0;
     var http3 = __importStar(require("http"));
-    var https2 = __importStar(require("https"));
+    var https3 = __importStar(require("https"));
     var pm = __importStar(require_proxy());
     var tunnel = __importStar(require_tunnel2());
     var undici_1 = require_undici();
@@ -18047,7 +18047,7 @@ var require_lib = __commonJS({
         const info = {};
         info.parsedUrl = requestUrl;
         const usingSsl = info.parsedUrl.protocol === "https:";
-        info.httpModule = usingSsl ? https2 : http3;
+        info.httpModule = usingSsl ? https3 : http3;
         const defaultPort = usingSsl ? 443 : 80;
         info.options = {};
         info.options.host = info.parsedUrl.hostname;
@@ -18117,7 +18117,7 @@ var require_lib = __commonJS({
         }
         if (!agent) {
           const options = { keepAlive: this._keepAlive, maxSockets };
-          agent = usingSsl ? new https2.Agent(options) : new http3.Agent(options);
+          agent = usingSsl ? new https3.Agent(options) : new http3.Agent(options);
           this._agent = agent;
         }
         if (usingSsl && this._ignoreSslError) {
@@ -25675,6 +25675,7 @@ var { parseArgs } = require("node:util");
 var { readStream: readStream2 } = (init_utils(), __toCommonJS(utils_exports));
 var node_fetch = (init_src(), __toCommonJS(src_exports));
 var fetch2 = node_fetch.default;
+var https2 = require("https");
 async function main() {
   let argFields = "";
   let argUrls = "";
@@ -25756,22 +25757,25 @@ async function upload({ fields, urls, insecure, dryRun }) {
     const form = await getFormData(fields);
     try {
       const uri = new URL(url.url);
+      let agent_fetch;
       if (uri.protocol === "https:" && insecure) {
-        const agent = new Agent({
-          connect: {
-            rejectUnauthorized: false
-          }
+        const agent = new https2.Agent({
+          rejectUnauthorized: false
         });
-        setGlobalDispatcher(agent);
+        agent_fetch = agent;
       }
-      const response = await fetch2(uri, {
+      const requestInit = {
         method: "POST",
         body: form,
         headers: {
           Authorization: url.password,
           "dry-run": dryRun
         }
-      });
+      };
+      if (agent_fetch) {
+        requestInit.agent = agent_fetch;
+      }
+      const response = await fetch2(uri, requestInit);
       if (response.status !== 200) {
         if (response.body) {
           var resp = "";
