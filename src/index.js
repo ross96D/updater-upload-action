@@ -6,6 +6,9 @@ const { parse_fields, parse_urls, UrlEntry } = require("./parse");
 const { Agent, setGlobalDispatcher } = require("undici");
 const { parseArgs } = require("node:util");
 const { readStream } = require("./utils");
+const node_fetch = require("node-fetch");
+const fetch = node_fetch.default;
+
 
 async function main() {
 	let argFields = "";
@@ -123,14 +126,19 @@ async function upload({ fields, urls, insecure, dryRun }) {
 			});
 
 			if (response.status !== 200) {
-				const data = await response.body?.getReader().read();
-				// TODO check for is done. This can miss incoming values
-				const resp = new TextDecoder().decode(data?.value);
-				console.error(`${url} status code ${response.status} ${resp}`);
+				if (response.body) {
+					var resp = ""
+					for await (const chunk of response.body) {
+						resp += chunk.toString();
+					}
+					console.error(`${url} status code ${response.status} ${resp}`);
+				} else {
+					console.error(`${url} status code ${response.status}`);
+				}
 				continue
 			}
 
-			const stream = response.body?.getReader()
+			const stream = response.body;
 			if (!stream) {
 				console.error(`${url} empty body on 200 status code`);
 				continue

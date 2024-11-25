@@ -2,7 +2,7 @@ import { stdout } from "node:process"
 
 
 /**
- * @param {ReadableStreamDefaultReader<Uint8Array>} stream
+ * @param {NodeJS.ReadableStream} stream
  * @param {((text: string) => void) | undefined} [write]
  */
 export async function readStream(stream, write) {
@@ -10,19 +10,11 @@ export async function readStream(stream, write) {
         stdout.write(text);
     };
     let lastLine = "";
-    while (true) {
-        const { done, value } = await stream.read();
-        if (value) {
-            const decoder = new TextDecoder("utf8");
-            let text = decoder.decode(value);
-            write(text);
-
-            let split = text.split('\n');
-            lastLine = setLastLine(lastLine, split)
-        }
-        if (done) {
-            break;
-        }
+    for await (const chunk of stream) {
+        const text = chunk.toString();
+        write(text);
+        const split = text.split('\n');
+        lastLine = setLastLine(lastLine, split)
     }
     lastLine = lastLine.trimEnd();
     lastLine = stripAnsi(lastLine);

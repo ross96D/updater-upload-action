@@ -2,6 +2,7 @@ import { expect, test } from "vitest";
 import { UrlEntry, parse_fields, parse_urls } from "./parse";
 import { group } from "@actions/core";
 import { readStream, setLastLine } from "./utils";
+import { Readable } from "node:stream";
 
 group("parse fields", async () => {
 	test("parse several edge case line", () => {
@@ -67,47 +68,20 @@ test("setLastLine", () => {
 });
 
 group("read stream", async () => {
-	class Stream {
-		static SIZE = 10;
-
-		/**  @param {string} text */
-		constructor(text) {
-			this.text = text;
-			this.offset = 0;
-		}
-
-		read() {
-			let start = this.offset;
-			let end = start + Stream.SIZE;
-			let done = false;
-			if (end >= this.text.length) {
-				end = this.text.length;
-				done = true;
-			}
-			this.offset = end;
-			let text = this.text.slice(start, end);
-			return {
-				done: done,
-				value: new TextEncoder().encode(text),
-			}
-		}
-	}
-
 	test("read_stream.basic", async () => {
 		const input = `line 1
 line 2
 line 3`
-
-		// @ts-ignore
+		let stream = Readable.from(input)
 		await readStream(stream)
 	});
 
 
 	test("read_stream.error", async () => {
 		const input = `[90m12:57PM[0m [32mINF[0m [36mdry-run=[0mfalse
-[90m12:57PM[0m [31mERR[0m [36merror=[0m[31m[1m"no github repo configured"[0m[0m [36mreqID=[0mcs7v111thaoqvb0k07c0
-`
-		let stream = new Stream(input);
+	[90m12:57PM[0m [31mERR[0m [36merror=[0m[31m[1m"no github repo configured"[0m[0m [36mreqID=[0mcs7v111thaoqvb0k07c0
+	`
+		let stream = Readable.from(input);
 		try {
 			// @ts-ignore
 			await readStream(stream)
