@@ -19124,8 +19124,9 @@ async function readStream(stream, write) {
     import_node_process.stdout.write(text);
   };
   let lastLine = "";
+  const dec = new TextDecoder();
   for await (const chunk of stream) {
-    const text = chunk.toString();
+    const text = dec.decode(chunk);
     write(text);
     const split = text.split("\n");
     lastLine = setLastLine(lastLine, split);
