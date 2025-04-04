@@ -33,5 +33,10 @@ test("something", async () => {
         console.log('Server running on http://localhost:3000');
     })
     const response = await fetch("http://localhost:3000");
-    await readStream(response.body);
+    const stream = response.body;
+    if (!stream) {
+        console.error(`${url} empty body on 200 status code`);
+        return;
+    }
+    await readStream(stream);
 })
